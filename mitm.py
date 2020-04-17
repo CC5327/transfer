@@ -69,12 +69,12 @@ def mitm(conf, recv_port, dest_addr, dest_port, recv_filename):
             print("{} bytes remaining".format(filesize))
             while len(data) < BLOCK_SIZE:
                 newdata = conn.recv(BLOCK_SIZE)  # Encrypted size is CHUNK_SIZE + 16
+                print("sending package of size {}...".format(len(newdata)))
+                sock_out.sendall(newdata)
                 data += newdata
                 if len(newdata) == 0:
                     break
             if len(data) > 0:
-                print("sending package of size {}...".format(len(data)))
-                sock_out.sendall(data)
                 print("decrypting package of size {}...".format(len(data[:BLOCK_SIZE])))
                 decrypted = chacha20.decrypt(i.to_bytes(12, byteorder="big"), data[:BLOCK_SIZE], None)
                 f.write(decrypted)
