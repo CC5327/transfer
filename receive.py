@@ -31,19 +31,19 @@ def receive(conf, receive_port, filename):
     print("Receiving encrypted chunks and decrypting them on {}...".format(filename))
     with open(filename, 'wb') as f:
         i = 0
+        data = b''
         while filesize != 0:
-            data = b''
-            while len(data) < CHUNK_SIZE + 16:
-                data += conn.recv(CHUNK_SIZE + 16)  # Encrypted size is CHUNK_SIZE + 16
+            while len(data) < BLOCK_SIZE:
+                data += conn.recv(BLOCK_SIZE)  # Encrypted size is CHUNK_SIZE + 16
                 filesize -= len(data)
                 if filesize == 0:
                     break
-            if len(data) == 0:
-                break
-            print("decrypting package of size {}...".format(len(data)))
-            decrypted = chacha20.decrypt(i.to_bytes(12, byteorder="big"), data, None)
-            f.write(decrypted)
-            i += 1
+            if len(data) > 0:
+                print("decrypting package of size {}...".format(len(data)))
+                decrypted = chacha20.decrypt(i.to_bytes(12, byteorder="big"), data[:BLOCK_SIZE], None)
+                f.write(decrypted)
+                i += 1
+                data = data[BLOCK_SIZE:]
             if filesize == 0:
                 break
     print("done!")
