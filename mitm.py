@@ -55,12 +55,13 @@ def mitm(conf, recv_port, dest_addr, dest_port, recv_filename):
     chacha20 = ChaCha20Poly1305(key)
     sock_out.sendall(encrypted_shared_key)
 
-    # Receive encrypted file chunks and resend them to other server
+    # Receiving and sending file size
     chacha20 = ChaCha20Poly1305(key)
-
     print("receiving file size...")
     filesize = int.from_bytes(conn.recv(8), byteorder='big')
-    print("file size is {} byts".format(filesize))
+    print("file size is {} bytes. Sending it...".format(filesize))
+    sock_out.sendall(filesize.to_bytes(8, byteorder="big"))
+    # Receive encrypted file chunks and resend them to other server
     with open(recv_filename, 'wb') as f:
         i = 0
         data = b''

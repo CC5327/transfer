@@ -27,7 +27,8 @@ def receive(conf, receive_port, filename):
     chacha20 = ChaCha20Poly1305(key)
     print("receiving file size...")
     filesize = int.from_bytes(conn.recv(8), byteorder='big')
-    print("file size is {} byts".format(filesize))
+    print("file size is {} bytes".format(filesize))
+
     print("Receiving encrypted chunks and decrypting them on {}...".format(filename))
     with open(filename, 'wb') as f:
         i = 0
