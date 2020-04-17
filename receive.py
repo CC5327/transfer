@@ -32,11 +32,12 @@ def receive(conf, receive_port, filename):
     with open(filename, 'wb') as f:
         i = 0
         data = b''
-        while filesize != 0:
+        while filesize > 0:
             print("{} bytes remaining".format(filesize))
             while len(data) < BLOCK_SIZE:
-                data += conn.recv(BLOCK_SIZE)  # Encrypted size is CHUNK_SIZE + 16
-                filesize -= len(data)
+                newdata = conn.recv(BLOCK_SIZE)  # Encrypted size is CHUNK_SIZE + 16
+                filesize -= len(newdata)
+                data += newdata
                 if filesize == 0:
                     break
             if len(data) > 0:
