@@ -29,7 +29,6 @@ def mitm(conf, recv_port, dest_addr, dest_port, recv_filename):
     sock_out = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     print('connecting to {}:{}'.format(dest_addr, dest_port))
     sock_out.connect((dest_addr, int(dest_port)))
-    sock_out.settimeout(TIMEOUT)
     # Receive PK from outgoing server
     their_pk = b''
     print("receiving public key...")
@@ -67,6 +66,7 @@ def mitm(conf, recv_port, dest_addr, dest_port, recv_filename):
                 print("decrypting package of size {}...".format(len(data)))
                 decrypted = chacha20.decrypt(i.to_bytes(12, byteorder="big"), data, None)
             except Exception as e:
+                print(e)
                 break
             f.write(decrypted)
             # Send encrypted message to outgoing server

@@ -11,7 +11,6 @@ def receive(conf, receive_port, filename):
     print('Listening on 0.0.0.0:{}'.format(receive_port))
     sock.bind(("0.0.0.0", int(receive_port)))
     sock.listen()
-    sock.settimeout(TIMEOUT)
     print('waiting connections')
     conn, client_address = sock.accept()
     print("connection accepted, sending public key...")
@@ -26,18 +25,23 @@ def receive(conf, receive_port, filename):
         exit(1)
     key = decrypt_shared_key(conf, encrypted_shared_key)
     chacha20 = ChaCha20Poly1305(key)
+    print("receiving file size...")
+    filesize = int.from_bytes(conn.recv(8), byteorder='big')
+    print("file size is {} byts".format(filesize))
     print("Receiving encrypted chunks and decrypting them on {}...".format(filename))
     with open(filename, 'wb') as f:
         i = 0
-        while True:
+        while filesize == 0:
             data = b''
             try:
                 data += conn.recv(CHUNK_SIZE + 16)  # Encrypted size is CHUNK_SIZE + 16
+                filesize -= len(data)
                 print("decrypting package of size {}...".format(len(data)))
                 decrypted = chacha20.decrypt(i.to_bytes(12, byteorder="big"), data, None)
                 f.write(decrypted)
                 i += 1
-            except Exception as e: # We assume timeout
-                break
+            except Exception as e:
+                print(e)
+                exit(1)
     print("done!")
     conn.close()

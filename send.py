@@ -1,3 +1,4 @@
+import os
 import socket
 from functools import partial
 
@@ -11,7 +12,7 @@ def send(conf, receive_name, filename):
     server_host, server_port = get_address(conf, receive_name)
     print('connecting to {}:{}'.format(server_host, server_port))
     sock.connect((server_host, server_port))
-    # Recibir llave pública
+    # Receive Public Key
     pk = b''
     print("receiving public key...")
     while True:
@@ -44,6 +45,9 @@ def send(conf, receive_name, filename):
     print("Generating encrypted shared key to receiver...")
     sock.sendall(encrypted_shared_key)
     i = 0
+    filesize = os.path.getsize(filename)
+    print("sending total filesize ({} bytes) in 8 bytes and in plain text".format(filesize))
+    sock.sendall(filesize.to_bytes(8, byteorder="big"))
     print("Sending encrypted file to receiver")
     with open(filename, 'rb') as f:
         for chunk in iter(partial(f.read, CHUNK_SIZE), b''):

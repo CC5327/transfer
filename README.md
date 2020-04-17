@@ -47,6 +47,3 @@ python main.py mitm <listening_port> <real_recipent_ip> <real_recipient_port> <p
 
 Intercepts a file listening on `<listening_port>` and resending the intercepted messages to `<ral_recipient_ip>:<real_recipient_port>`. The intercepted file is saved on `<path_to_receive>`
 
-## Bugs
-
-* Final package cannot be of size CHUNK_SIZE or the program does not detect the end of files (it receives the file but never ends). I could fix this sending the file size at the start of the protocol but I think it is too much effort for an example.
