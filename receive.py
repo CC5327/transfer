@@ -32,12 +32,8 @@ def receive(conf, receive_port, filename):
         while True:
             data = b''
             data += conn.recv(CHUNK_SIZE + 16)  # Encrypted size is CHUNK_SIZE + 16
-            try:
-                print("decrypting package of size {}...".format(len(data)))
-                decrypted = chacha20.decrypt(i.to_bytes(12, byteorder="big"), data, None)
-            except Exception as e:
-                print(e)
-                exit(1)
+            print("decrypting package of size {}...".format(len(data)))
+            decrypted = chacha20.decrypt(i.to_bytes(12, byteorder="big"), data, None)
             f.write(decrypted)
             i += 1
             if len(data) < CHUNK_SIZE + 16:
