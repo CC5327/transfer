@@ -36,7 +36,7 @@ def receive(conf, receive_port, filename):
                 print("decrypting package of size {}...".format(len(data)))
                 decrypted = chacha20.decrypt(i.to_bytes(12, byteorder="big"), data, None)
             except Exception as e:
-                print("error decrypting: {}".format(e))
+                print(e)
                 exit(1)
             f.write(decrypted)
             i += 1
