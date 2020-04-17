@@ -38,10 +38,12 @@ def receive(conf, receive_port, filename):
                 filesize -= len(data)
                 if filesize == 0:
                     break
-                print("decrypting package of size {}...".format(len(data)))
-                decrypted = chacha20.decrypt(i.to_bytes(12, byteorder="big"), data, None)
-                f.write(decrypted)
-                i += 1
+            if len(data) == 0:
+                break
+            print("decrypting package of size {}...".format(len(data)))
+            decrypted = chacha20.decrypt(i.to_bytes(12, byteorder="big"), data, None)
+            f.write(decrypted)
+            i += 1
             if filesize == 0:
                 break
     print("done!")
