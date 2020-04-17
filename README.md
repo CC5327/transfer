@@ -4,8 +4,11 @@
 
 Transfer is an example of a `man-in-the-middle` attack, using public key cryptography (RSA in this example).
 
+This example requires Python 3 to work.
+
 ## Quick start
 
+* Install Python Requirements: `pip install -r requirements.txt`
 * Rename `config.json.example` to `config.json`
 * To send `file.txt` to `alice`, execute `python main.py send alice file.txt`
 * To receive `file.txt` listening on port `9876`, execute `python main.py receive 9876 file.txt` 
@@ -21,14 +24,13 @@ This file defines some properties and values the program needs to remember, such
 
 To create this file, rename `config.json.sample` to `config.json`.
 
-
 ## Send Mode
 
 ```bash
 python main.py send <recipent_name> <file_to_send> 
 ```
 
-Sends `<file_to_send>` to `<recipient_name>`, The IP and port of `<recipient_name>` is obtained from the JSON file hosted in the address set as `resolver` property in `config.json`.
+Sends `<file_to_send>` to `<recipient_name>`, The IP and port of `<recipient_name>` is obtained from the JSON file hosted in the address set as `resolver` property in `config.json`. When sending, the receiver sends its Public Key to the sender. The sender checks if it remembers that public key associated to the name of the receiver. If not, it asks if you want to save it as trusted. If it recognizes it, it compares it with the saved one. If they are different, the program halts and alerts of a possible MITM attack.
 
 ## Receive Mode
 
@@ -45,5 +47,5 @@ Receives a file listening on `<listening_port>` and copying the file to `<path_t
 python main.py mitm <listening_port> <real_recipent_ip> <real_recipient_port> <path_to_receive> 
 ```
 
-Intercepts a file listening on `<listening_port>` and resending the intercepted messages to `<ral_recipient_ip>:<real_recipient_port>`. The intercepted file is saved on `<path_to_receive>`
+Intercepts a file listening on `<listening_port>` and resending the intercepted messages to `<ral_recipient_ip>:<real_recipient_port>`. The intercepted file is saved on `<path_to_receive>`.
 
