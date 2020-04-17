@@ -33,12 +33,16 @@ def receive(conf, receive_port, filename):
         i = 0
         while filesize != 0:
             data = b''
-            while len(data) != CHUNK_SIZE + 16 or filesize != 0:
+            while len(data) < CHUNK_SIZE + 16:
                 data += conn.recv(CHUNK_SIZE + 16)  # Encrypted size is CHUNK_SIZE + 16
                 filesize -= len(data)
+                if filesize == 0:
+                    break
                 print("decrypting package of size {}...".format(len(data)))
                 decrypted = chacha20.decrypt(i.to_bytes(12, byteorder="big"), data, None)
                 f.write(decrypted)
                 i += 1
+            if filesize == 0:
+                break
     print("done!")
     conn.close()
