@@ -31,7 +31,7 @@ def receive(conf, receive_port, filename):
     print("Receiving encrypted chunks and decrypting them on {}...".format(filename))
     with open(filename, 'wb') as f:
         i = 0
-        while filesize == 0:
+        while filesize != 0:
             data = b''
             try:
                 data += conn.recv(CHUNK_SIZE + 16)  # Encrypted size is CHUNK_SIZE + 16
