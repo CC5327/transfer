@@ -49,3 +49,12 @@ python main.py mitm <listening_port> <real_recipent_ip> <real_recipient_port> <p
 
 Intercepts a file listening on `<listening_port>` and resending the intercepted messages to `<ral_recipient_ip>:<real_recipient_port>`. The intercepted file is saved on `<path_to_receive>`.
 
+## Troubleshoot
+
+* **I am having an error about config file not found**
+
+**R:** Rename `config.json.sample` to `config.json`
+
+* **I am trying to send something but I cannot connect to the receiver**
+
+**R:** Execute the receiver first, then execute the sender.
