@@ -57,22 +57,26 @@ def mitm(conf, recv_port, dest_addr, dest_port, recv_filename):
 
     # Receive encrypted file chunks and resend them to other server
     chacha20 = ChaCha20Poly1305(key)
+
+    print("receiving file size...")
+    filesize = int.from_bytes(conn.recv(8), byteorder='big')
+    print("file size is {} byts".format(filesize))
     with open(recv_filename, 'wb') as f:
         i = 0
-        while True:
-            data = b''
-            try:
-                data += conn.recv(CHUNK_SIZE + 16)  # Encrypted size is CHUNK_SIZE + 16
-                print("decrypting package of size {}...".format(len(data)))
-                decrypted = chacha20.decrypt(i.to_bytes(12, byteorder="big"), data, None)
-            except Exception as e:
-                print(e)
-                break
-            f.write(decrypted)
-            # Send encrypted message to outgoing server
-            print("sending package of size {}...".format(len(data)))
-            sock_out.sendall(data)
-            i += 1
-    print("done!")
-    conn.close()
-
+        data = b''
+        while filesize > 0:
+            print("{} bytes remaining".format(filesize))
+            while len(data) < BLOCK_SIZE:
+                newdata = conn.recv(BLOCK_SIZE)  # Encrypted size is CHUNK_SIZE + 16
+                data += newdata
+                if len(newdata) == 0:
+                    break
+            if len(data) > 0:
+                print("sending package of size {}...".format(len(data)))
+                sock_out.sendall(data)
+                print("decrypting package of size {}...".format(len(data[:BLOCK_SIZE])))
+                decrypted = chacha20.decrypt(i.to_bytes(12, byteorder="big"), data[:BLOCK_SIZE], None)
+                f.write(decrypted)
+                filesize -= len(decrypted)
+                i += 1
+                data = data[BLOCK_SIZE:]
