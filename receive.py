@@ -1,9 +1,8 @@
 import socket
 
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
-from cryptography.hazmat.primitives.serialization.base import PublicFormat
+from cryptography.hazmat.primitives.serialization import PublicFormat
 
-import utils
 from utils import *
 
 
@@ -12,6 +11,7 @@ def receive(conf, receive_port, filename):
     print('Listening on 0.0.0.0:{}'.format(receive_port))
     sock.bind(("0.0.0.0", int(receive_port)))
     sock.listen()
+    sock.settimeout(TIMEOUT)
     print('waiting connections')
     conn, client_address = sock.accept()
     print("connection accepted, sending public key...")
@@ -24,19 +24,20 @@ def receive(conf, receive_port, filename):
     if len(encrypted_shared_key) == 0:
         print("empty shared key received. Exiting...")
         exit(1)
-    key = utils.decrypt_shared_key(conf, encrypted_shared_key)
+    key = decrypt_shared_key(conf, encrypted_shared_key)
     chacha20 = ChaCha20Poly1305(key)
     print("Receiving encrypted chunks and decrypting them on {}...".format(filename))
     with open(filename, 'wb') as f:
         i = 0
         while True:
             data = b''
-            data += conn.recv(CHUNK_SIZE + 16)  # Encrypted size is CHUNK_SIZE + 16
-            print("decrypting package of size {}...".format(len(data)))
-            decrypted = chacha20.decrypt(i.to_bytes(12, byteorder="big"), data, None)
-            f.write(decrypted)
-            i += 1
-            if len(data) < CHUNK_SIZE + 16:
+            try:
+                data += conn.recv(CHUNK_SIZE + 16)  # Encrypted size is CHUNK_SIZE + 16
+                print("decrypting package of size {}...".format(len(data)))
+                decrypted = chacha20.decrypt(i.to_bytes(12, byteorder="big"), data, None)
+                f.write(decrypted)
+                i += 1
+            except Exception as e: # We assume timeout
                 break
     print("done!")
     conn.close()

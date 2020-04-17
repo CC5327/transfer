@@ -8,6 +8,7 @@ from cryptography.hazmat.primitives.serialization import PrivateFormat, Encoding
 
 CONFIG = "config.json"
 CHUNK_SIZE = 1024
+TIMEOUT = 5
 
 
 def load_config():
